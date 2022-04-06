@@ -1,43 +1,23 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities;
 
-@layer utilities {
-  .input {
-    @apply block
-        w-full
-        px-3
-        py-3
-        h-20
+.input {
+  @apply w-full
+        p-3
         text-lg
         font-normal
         text-gray-700
         bg-white bg-clip-padding
         border border-solid border-gray-300
-        rounded-2xl
+        rounded-xl
         transition
         ease-in-out
-        m-0
-        focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none;
-  }
-  .inputs {
-    @apply block
-        w-full
-        px-3
-        py-2
-        h-12
-        text-lg
-        font-normal
-        text-gray-700
-        bg-white bg-clip-padding
-        border border-solid border-gray-300
-        rounded-2xl
-        transition
-        ease-in-out
-        m-0
-        focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none;
-  }
-  .button {
-    @apply lg:px-8 px-6 py-2 my-4 lg:py-3 rounded-full border-none text-white bg-blue-800 font-semibold;
-  }
+        focus:text-gray-800 focus:bg-white focus:border-blue-600 focus:outline-none
+        placeholder:text-gray-500;
 }
+
+.button {
+  @apply py-3 px-6 my-3 rounded-full border-none text-white bg-blue-800 font-semibold;
+}
+
+@tailwind utilities;

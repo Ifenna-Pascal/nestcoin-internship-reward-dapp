@@ -3,7 +3,7 @@ import Nav from "./components/Nav";
 
 function App() {
   return (
-    <div>
+    <div className="h-screen flex flex-col overflow-hidden">
       <Nav />
       <Input />
     </div>
