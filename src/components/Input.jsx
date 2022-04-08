@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import { display } from "../utils/address";
+import * as XLSX from "xlsx";
+
 import Error from "./Error";
 
 function Input() {
-  const [error, setError] = useState("");
+  const [error, setError] = useState({ err: "", excelErr: "", input: "" });
   const [bal, setBal] = useState("");
+
+  const [excelFile, setExcelFile] = useState(null);
+  const [excelData, setExcelData] = useState(null);
 
   const handleDistributeSubmit = (e) => {
     e.preventDefault();
@@ -13,9 +18,9 @@ function Input() {
     const arrayInput = e.target.arrayInput.value;
 
     if (!arrayInput) {
-      setError("An address array is required");
+      setError({ ...error, input: "An address array is required" });
       setTimeout(() => {
-        setError("");
+        setError({ ...error, input: "" });
       }, 1500);
       return;
     }
@@ -38,10 +43,15 @@ function Input() {
     //check your input value from the console
     console.log(balanceInput);
 
-    if (!balanceInput) {
-      setError("An address is required");
+    if (balanceInput === "") {
+      setError({ ...error, err: "An address is required" });
       setTimeout(() => {
-        setError("");
+        setError({ ...error, err: "" });
+      }, 1000);
+    } else if (balanceInput.length !== 42) {
+      setError({ ...error, err: "Pls put a valid address" });
+      setTimeout(() => {
+        setError({ ...error, err: "" });
       }, 1000);
     }
 
@@ -49,16 +59,52 @@ function Input() {
     e.target.balance.value = "";
     setBal(20000);
   };
+
+  // handle File
+  const handleFile = (e) => {
+    const fileType = ["application/vnd.ms-excel"];
+    let selectedFile = e.target.files[0];
+    if (selectedFile) {
+      // console.log(selectedFile.type);
+      if (selectedFile && fileType.includes(selectedFile.type)) {
+        let reader = new FileReader();
+        reader.readAsArrayBuffer(selectedFile);
+        reader.onload = (e) => {
+          setError({ ...error, excelErr: "" });
+          setExcelFile(e.target.result);
+        };
+      } else {
+        setError({ ...error, excelErr: "Please select only excel file types" });
+
+        setExcelFile(null);
+      }
+    }
+  };
+
+  // submit function
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (excelFile !== null) {
+      const workbook = XLSX.read(excelFile, { type: "buffer" });
+      const worksheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[worksheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+      setExcelData(data);
+    } else {
+      setExcelData(null);
+    }
+  };
+
   return (
-    <div className="flex flex-col max-w-2xl mx-auto overflow-auto px-4 overflow-hidden">
+    <div className="flex flex-col max-w-2xl mx-auto overflow-auto px-4">
       {bal && (
         <h2 className="text-center text-2xl my-2 text-blue-900 ">
           Your balance is {bal}
         </h2>
       )}
 
-      <form className="form text-center mb-4" onSubmit={handleDistributeSubmit}>
-        <Error error={error} />
+      <form className="form text-center " onSubmit={handleDistributeSubmit}>
+        {error.input && <Error error={error.input} />}
         <input
           className="input"
           placeholder="Seperate address with a comma..."
@@ -67,8 +113,17 @@ function Input() {
         <button className="button">Distribute Token</button>
       </form>
 
+      <form className="flex flex-col items-center" onSubmit={handleSubmit}>
+        <h1>Upload the list of addresses</h1>
+        {error.excelErr && <Error error={error.excelErr} />}
+        <div className="w-full border-grey border-2 p-3 mt-1 flex items-center">
+          <input type="file" onChange={handleFile} id="fle" />
+        </div>
+        <button className="button">Distribute Token</button>
+      </form>
+
       <form className="form text-center mb-4" onSubmit={handleBalanceSubmit}>
-        <Error error={error} />
+        {error.err && <Error error={error.err} />}
         <input
           className="input"
           placeholder="Enter your address to view your balance"
@@ -94,7 +149,7 @@ function Input() {
             </tr>
           </thead>
           <tbody>
-            {display.map((x, i) => (
+            {(excelData ? excelData : display).map((x, i) => (
               <tr
                 key={i}
                 className="bg-white border-b hover:cursor-pointer hover:bg-gray-200 "
@@ -105,8 +160,12 @@ function Input() {
                 >
                   {i}
                 </th>
-                <td className="px-6 py-4">{x.address}</td>
-                <td className="px-6 py-4">{x.balance}</td>
+                <td className="px-6 py-4">
+                  {excelData ? x.customer_address : x.address}
+                </td>
+                <td className="px-6 py-4">
+                  {excelData ? x.amount : x.balance}
+                </td>
               </tr>
             ))}
           </tbody>
